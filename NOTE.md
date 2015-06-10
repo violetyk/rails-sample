@@ -82,7 +82,7 @@ rake db:create
 rake db:migrate
 ```
 
-- db/schema.rbに最初のスキーマを書く
+- db/schema.rb に最初のスキーマを書く
 
 ```
 rake db:setup
@@ -112,4 +112,50 @@ gem 'terminal-notifier-guard'
 gem 'spring'
 gem 'spring-commands-rspec'
 gem 'rb-fsevent'
+
+# slim
+gem 'html2slim'
+```
+
+
+# rails g いろいろ
+
+```
+rails g -h
+rails g model -h
+```
+
+```
+rails g model post --skip-migration --skip-fixture --no-test-framework
+rails g controller posts index show post --no-test-framework
+```
+
+
+# twitter bootstrapを使う
+
+ダウンロードしてvendorに配置
+
+|ダウンロードファイル|配置先|
+|:--|:--|
+|dist/css/bootstrap.min.css|vendor/assets/stylesheets/.|
+|dist/js/bootstrap.min.js|vendor/assets/javascripts/.|
+|dist/fonts|vendor/assets/.|
+
+
+app/assets/javascripts/application.js
+
+```
+//= require jquery
+//= require jquery_ujs
+//= require bootstrap.min
+//= require_tree .
+```
+
+app/assets/stylesheets/application.css
+
+```
+*= require bootstrap.min
+*= require_tree .
+*= require_self
+*/
 ```

@@ -1,0 +1,25 @@
+.blog-header
+  h1.blog-title
+    | The Bootstrap Blog
+  p.lead.blog-description
+    | The official example template of creating a blog with Bootstrap.
+.row
+.col-sm-8.blog-main
+  .blog-post
+    - @posts.each do |post|
+      h2.blog-post-title
+        | #{post.title}
+      p.blog-post-meta
+        | January 1, 2014 by 
+        a[href="#"]
+          | Mark
+      | #{post.body}
+  nav
+    ul.pager
+      li
+        a[href="#"]
+          | Previous
+      li
+        a[href="#"]
+          | Next
+= render "shared/sidebar"
