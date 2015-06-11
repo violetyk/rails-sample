@@ -172,3 +172,16 @@ end
 ```
 rails g rspec:install
 ```
+
+
+# CircieCIのバッジをREADMEに表示
+
+- https://circleci.com/docs/status-badges
+- API Token を生成
+  - Project Settings > Permissions > API Permissions
+  - Statusを選んでToken labelに`badge`などと入力
+- https://circleci.com/gh/violetyk/rails-sample.svg?style=shield&circle-token=:circle-token
+- README.md等に貼り付け
+  - ![status](https://circleci.com/gh/violetyk/rails-sample.svg?style=shield&circle-token=:circle-token)
+
+
