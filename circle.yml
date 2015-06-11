@@ -50,6 +50,8 @@ database:
     - cp config/database.yml.ci config/database.yml
     # - bundle exec rake db:create db:schema:load
     - bundle exec rake db:schema:load
+      environment:
+        RAILS_ENV: test
 
 ## Customize test commands
 # test:
