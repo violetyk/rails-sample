@@ -36,12 +36,37 @@ gem 'slim-rails'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
-  gem 'byebug'
+  # gem 'byebug'
 
   # Access an IRB console on exception pages or by using <%= console %> in views
-  gem 'web-console', '~> 2.0'
+  # gem 'web-console', '~> 2.0'
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
 end
 
+
+# debug tools
+group :development, :test do
+  # pry
+  gem 'pry-rails'          # rails cをpryに
+  gem 'pry-doc'            # pryに show-doc(?), show-source($)コマンドを追加
+  gem 'pry-byebug'         # binding.pry
+  gem 'pry-stack_explorer' # pryにshow-stack等を追加
+
+  # エラー画面系
+  gem 'better_errors'
+  gem 'binding_of_caller'
+
+  # ActiveRecordの出力をテーブルに Hirb.disable/Hirb.enableで切り替えられる
+  gem 'hirb'
+  gem 'hirb-unicode'
+
+  # print系
+  gem 'awesome_print' # .apメソッド
+  gem 'tapp' # .tappメソッドでオブジェクトの状態を出力
+
+  # 出力制御系
+  gem 'quiet_assets' # assetsファイルへのアクセスログを出力しない
+
+end
