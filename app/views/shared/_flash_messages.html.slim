@@ -1,0 +1,8 @@
+.alert.alert-danger
+  button.close[type="button" data-dismiss="alert" aria-label="Close"]
+    span[aria-hidden="true"]
+      | ×
+  ul
+    - flash[:alert].tap { |v| break [v] if v.is_a?(String) }.each do |alert|
+      li = alert
+

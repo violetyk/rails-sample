@@ -2,6 +2,7 @@
   h1
     | New Post
 
+= render "shared/flash_messages"
 = form_for @post do |f|
   .form-group
     = f.label :title, 'Title'
