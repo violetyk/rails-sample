@@ -185,3 +185,17 @@ rails g rspec:install
   - ![status](https://circleci.com/gh/violetyk/rails-sample.svg?style=shield&circle-token=:circle-token)
 
 
+# CircleCIからSlackへ通知
+- SlackのWeb画面のConfigureIntegrationsへ
+- CircleCIを選んでAdd
+- 流す部屋を選ぶ
+- できあがったWebhookのURLをコピー
+- CircleCIのProjectSettings > Notifications > Chat Notificationsに貼り付てSave
+
+
+# CircleCIからDockerHubへ
+- Project Settings > Tweaks > Environment Variablesで環境変数を入れておく
+  - `DOCKER_EMAIL`
+  - `DOCKER_USER`
+  - `DOCKER_PASS`
+- circle.ymlに記述

@@ -1,5 +1,7 @@
 ## Customize the test machine
 machine:
+  services:
+    - docker
 
   timezone:
     Asia/Tokyo # Set the timezone
@@ -27,21 +29,24 @@ machine:
 
 ## Customize dependencies
 dependencies:
-  pre:
-    - sudo pip install awscli
+  # pre:
     # - npm install coffeescript # install from a different package manager
     # - gem uninstall bundler # use a custom version of bundler
     # - gem install bundler --pre
 
   override:
-    - bundle install: # note ':' here
+    - docker info
+    - if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; fi
+    - docker build -t violetyk/rails-sample
+    - mkdir -p ~/docker; docker save violetyk/rails-sample > ~/docker/image.tar
+    - sudo pip install awscli
+    - bundle update: # note ':' here
         timeout: 180 # fail if command has no output for 3 minutes
 
   # we automatically cache and restore many dependencies between
   # builds. If you need to, you can add custom paths to cache:
-  # cache_directories:
-    # - "custom_1"   # relative to the build directory
-    # - "~/custom_2" # relative to the user's home directory
+  cache_directories:
+    - "~/docker"
 
 ## Customize database setup
 database:
@@ -62,7 +67,12 @@ database:
           # RACK_ENV: test
 
 ## Customize deployment commands
-# deployment:
+deployment:
+  hub:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push violetyk/rails-sample
   # staging:
     # branch: master
     # heroku:
