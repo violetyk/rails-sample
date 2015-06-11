@@ -1,0 +1,13 @@
+default: &default
+  adapter: mysql2
+  encoding: utf8
+  pool: 5
+  username: root
+  password: root
+  # socket: /tmp/mysql.sock
+
+test:
+  <<: *default
+  username: ubuntu
+  password:
+  database: circle_test
