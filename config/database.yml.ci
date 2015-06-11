@@ -6,3 +6,8 @@ default: &default
   password:
   # socket: /tmp/mysql.sock
   database: circle_test
+
+test:
+  <<: *default
+  username: ubuntu
+  password:
