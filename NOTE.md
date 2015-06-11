@@ -159,3 +159,16 @@ app/assets/stylesheets/application.css
 *= require_self
 */
 ```
+
+
+# rspec ことはじめ
+
+```
+group :development, :test do
+  gem 'rspec-rails', '~> 3.0'
+end
+```
+
+```
+rails g rspec:install
+```
