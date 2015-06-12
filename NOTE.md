@@ -199,3 +199,36 @@ rails g rspec:install
   - `DOCKER_USER`
   - `DOCKER_PASS`
 - circle.ymlに記述
+
+
+# Unicorn
+
+## 導入
+```
+gem 'unicorn'
+```
+
+config/unicorn.rb  
+
+- 参考
+  - http://unicorn.bogomips.org/examples/unicorn.conf.rb
+  - https://github.com/herokaijp/devcenter/wiki/Rails-unicorn
+
+
+## 起動
+
+- `-c` 設定ファイル
+- `-D` デーモン化
+- `-E` 環境変数
+
+```
+bundle exec unicorn -c config/unicorn.rb -D -E production
+```
+
+## Unicornの起動や停止をrakeタスクにする
+
+```
+rails g task unicorn
+```
+
+- lib/tasks/unicorn.rake

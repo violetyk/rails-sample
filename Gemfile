@@ -33,7 +33,6 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 # gem 'capistrano-rails', group: :development
 
 gem 'slim-rails'
-gem 'foreman'
 
 # preloader
 group :development, :test do
@@ -76,7 +75,7 @@ group :development, :test do
 
 end
 
-group :production, :staging do
-  gem 'unicorn'
-  gem 'unicorn-worker-killer'
-end
+# group :production, :staging do
+gem 'unicorn'
+gem 'unicorn-worker-killer'
+# end
