@@ -1,33 +1,17 @@
-## Customize the test machine
 machine:
   services:
     - docker
 
   timezone:
-    Asia/Tokyo # Set the timezone
+    Asia/Tokyo
 
-  # Version of ruby to use
   ruby:
     version:
       2.2.0
 
-  # Override /etc/hosts
   hosts:
     circlehost: 127.0.0.1
-    dev.mycompany.com: 127.0.0.1
 
-  # Add some environment variables
-  # environment:
-    # CIRCLE_ENV: test
-    # DATABASE_URL: postgres://ubuntu:@127.0.0.1:5432/circle_test
-
-## Customize checkout
-# checkout:
-  # post:
-    # - git submodule sync
-    # - git submodule update --init # use submodules
-
-## Customize dependencies
 dependencies:
   # pre:
     # - npm install coffeescript # install from a different package manager
@@ -35,28 +19,24 @@ dependencies:
     # - gem install bundler --pre
 
   override:
-    - docker info
-    - if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; fi
-    - docker build -t violetyk/rails-sample
-    - mkdir -p ~/docker; docker save violetyk/rails-sample > ~/docker/image.tar
-    - sudo pip install awscli
-    - bundle update: # note ':' here
-        timeout: 180 # fail if command has no output for 3 minutes
+    # - docker info
+    # - if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; fi
+    # - docker build -t violetyk/rails-sample ./rails-sample
+    # - mkdir -p ~/docker; docker save violetyk/rails-sample > ~/docker/image.tar
+    # - sudo pip install awscli
+    # - bundle update: # note ':' here
+        # timeout: 180 # fail if command has no output for 3 minutes
 
   # we automatically cache and restore many dependencies between
   # builds. If you need to, you can add custom paths to cache:
-  cache_directories:
-    - "~/docker"
+  # cache_directories:
+    # - "~/docker"
 
-## Customize database setup
 database:
   override:
-    # replace CircleCI's generated database.yml
     - cp config/database.yml.ci config/database.yml
-    # - bundle exec rake db:create db:schema:load
     - bundle exec rake db:schema:load RAILS_ENV=test
 
-## Customize test commands
 # test:
   # override:
     # - phpunit test/unit-tests # use PHPunit for testing
@@ -67,12 +47,12 @@ database:
           # RACK_ENV: test
 
 ## Customize deployment commands
-deployment:
-  hub:
-    branch: master
-    commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push violetyk/rails-sample
+# deployment:
+  # hub:
+    # branch: master
+    # commands:
+      # - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      # - docker push violetyk/rails-sample
   # staging:
     # branch: master
     # heroku:
