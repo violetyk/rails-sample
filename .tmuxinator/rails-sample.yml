@@ -7,7 +7,10 @@ root: ~/src/github.com/violetyk/rails-sample
 # socket_name: foo
 
 # Runs before everything. Use it to start daemons etc.
-pre: mysql.server start
+pre:
+  # - mysql.server start
+  - redis-server /usr/local/etc/redis.conf
+  - memcached -l localhost:22222 -l lcalhost:33333
 
 # Runs in each window and pane before window/pane specific commands. Useful for setting up interpreter versions.
 pre_window: rbenv shell 2.2.0
@@ -19,12 +22,10 @@ pre_window: rbenv shell 2.2.0
 # tmux_command: byobu
 
 windows:
-  - vim:
-    - vim +NERDTree
-  - console: bundle exec rails c
-  - server:
-    - memcached -l localhost:22222 &
-    - memcached -l localhost:33333 &
-    - redis-server /usr/local/etc/redis.conf &
-    - bundle exec rails s
-  # - logs: tail -f log/development.log
+  - rails-sample:
+      layout: even-horizontal
+      panes:
+        - vim +NERDTree
+        - bundle exec rails s
+  - console:
+    - bundle exec rails c
