@@ -34,6 +34,10 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 
 gem 'slim-rails'
 
+# authenticate
+gem 'devise'
+
+
 # preloader
 group :development, :test do
   gem 'spring'

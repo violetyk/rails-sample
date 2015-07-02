@@ -208,7 +208,7 @@ rails g rspec:install
 gem 'unicorn'
 ```
 
-config/unicorn.rb  
+config/unicorn.rb が設定ファイル
 
 - 参考
   - http://unicorn.bogomips.org/examples/unicorn.conf.rb
@@ -232,3 +232,248 @@ rails g task unicorn
 ```
 
 - lib/tasks/unicorn.rake
+
+```
+rake -T unicorn
+```
+
+
+# devise
+
+- ユーザ登録やログイン周りの仕組みをひととおり提供してくれるRailsエンジン
+- Rackの認証フレームワークであるWardenがベース
+- 必要な機能だけ使えるモジュラー構造
+  - DatabaseAthenticatable
+    - ユーザがサインインするときに認証するためのパスワードをDBに暗号化して保存
+    - POSTリクエストかBasic認証
+  - TokenAuthenticatable
+    - 認証用トークンでサインインする
+    - クエリ文字列かBasic認証
+  - Oauthable
+    - OmniAuth(https://github.com/intridea/omniauth) のサポート
+  - Confirmable
+    - 確認のメールを送り、サインイン時に確認されたかどうか検査する
+  - Recoverable
+    - パスワードのリセット
+  - Registerable
+    - 登録フローでサインアップ
+    - アカウントの編集、削除
+  - Rememberable
+    - Cookieを使ったログイン状態の保存
+  - Trackable
+    - ログイン回数、日時やIPアドレスなどのトラッキング
+  - Timeoutable
+    - 特定期間アクセスがなければセッションを期限切れにする
+  - Validatable
+    - emailとパスワードによるヴァリデーション
+    - 独自のバリデーションも追加できる
+  - Lockable
+    - サインインを特定回数失敗したらアカウントロックする
+    - 特定時間経過後、メールによりアカウントロック解除できる
+
+
+## 導入
+
+```
+gem 'devise'
+```
+
+```
+bundle exec rails g devise:install
+      create  config/initializers/devise.rb
+      create  config/locales/devise.en.yml
+===============================================================================
+
+Some setup you must do manually if you haven't yet:
+
+  1. Ensure you have defined default url options in your environments files. Here
+     is an example of default_url_options appropriate for a development environment
+     in config/environments/development.rb:
+
+       config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+     In production, :host should be set to the actual host of your application.
+
+  2. Ensure you have defined root_url to *something* in your config/routes.rb.
+     For example:
+
+       root to: "home#index"
+
+  3. Ensure you have flash messages in app/views/layouts/application.html.erb.
+     For example:
+
+       <p class="notice"><%= notice %></p>
+       <p class="alert"><%= alert %></p>
+
+  4. If you are deploying on Heroku with Rails 3.2 only, you may want to set:
+
+       config.assets.initialize_on_precompile = false
+
+     On config/application.rb forcing your application to not access the DB
+     or load models when precompiling your assets.
+
+  5. You can copy Devise views (for customization) to your app by running:
+
+       rails g devise:views
+
+===============================================================================
+```
+
+- 上記全て確認しておく(特に1と2)
+- deviseの機能をつけたいモデルクラス(UserやAdminなど)を指定する
+
+```
+bundle exec rails g devise User
+      invoke  active_record
+      create    db/migrate/20150702081456_devise_create_users.rb
+      create    app/models/user.rb
+      invoke    rspec
+      create      spec/models/user_spec.rb
+      insert    app/models/user.rb
+       route  devise_for :users
+```
+
+- `models/user.rb`でつけたいモジュールを確認
+- `db/migrate/nnnnnnnnnnnnnn_devise_create_users.rb`でつけたいモジュールカラムを追加
+  - ヘルパーがある
+    - t.database_authenticatable
+    - t.confirmable
+    - t.recoverable
+    - t.rememberable
+    - t.trackable
+- `config/routes.rb`でルーティングを確認`devise_for :user`
+- マイグレーションを実行
+
+```
+rake db:migrate
+```
+
+## 確認
+
+ここまでやると一通り機能が提供される。  
+たとえば、`http://localhost:3000/users/sign_up`にアクセスすると、ユーザ登録画面が動く。
+
+
+```
+> show-routes -G user
+        new_user_session GET    /users/sign_in(.:format)       devise/sessions#new
+            user_session POST   /users/sign_in(.:format)       devise/sessions#create
+    destroy_user_session DELETE /users/sign_out(.:format)      devise/sessions#destroy
+           user_password POST   /users/password(.:format)      devise/passwords#create
+       new_user_password GET    /users/password/new(.:format)  devise/passwords#new
+      edit_user_password GET    /users/password/edit(.:format) devise/passwords#edit
+                         PATCH  /users/password(.:format)      devise/passwords#update
+                         PUT    /users/password(.:format)      devise/passwords#update
+cancel_user_registration GET    /users/cancel(.:format)        devise/registrations#cancel
+       user_registration POST   /users(.:format)               devise/registrations#create
+   new_user_registration GET    /users/sign_up(.:format)       devise/registrations#new
+  edit_user_registration GET    /users/edit(.:format)          devise/registrations#edit
+                         PATCH  /users(.:format)               devise/registrations#update
+                         PUT    /users(.:format)               devise/registrations#update
+                         DELETE /users(.:format)               devise/registrations#destroy
+```
+
+## 基本的なメソッド
+
+以降の処理はログインが必要
+```
+authenticate_user!
+```
+
+ログインが必要なコントローラは`before_action`で設定する
+```
+before_action :authenticate_user!
+```
+
+ユーザがログインしているかどうか。userのところは指定したモデル名。
+```
+user_sined_in?
+```
+
+ログイン中のユーザ情報
+```
+current_user
+```
+
+ログイン中のユーザのセッション情報
+```
+user_session
+```
+
+
+## カスタマイズ
+
+### ビューのカスタマイズ
+ログインやユーザ登録画面をカスタマイズするには、オーバーライド用のビューを生成して書いていく。
+
+```
+$ bundle exec rails g devise:views users
+      invoke  Devise::Generators::SharedViewsGenerator
+      create    app/views/users/shared
+      create    app/views/users/shared/_links.html.erb
+      invoke  form_for
+      create    app/views/users/confirmations
+      create    app/views/users/confirmations/new.html.erb
+      create    app/views/users/passwords
+      create    app/views/users/passwords/edit.html.erb
+      create    app/views/users/passwords/new.html.erb
+      create    app/views/users/registrations
+      create    app/views/users/registrations/edit.html.erb
+      create    app/views/users/registrations/new.html.erb
+      create    app/views/users/sessions
+      create    app/views/users/sessions/new.html.erb
+      create    app/views/users/unlocks
+      create    app/views/users/unlocks/new.html.erb
+      invoke  erb
+      create    app/views/users/mailer
+      create    app/views/users/mailer/confirmation_instructions.html.erb
+      create    app/views/users/mailer/reset_password_instructions.html.erb
+      create    app/views/users/mailer/unlock_instructions.html.erb
+```
+
+コピー用のビューを使う設定を`config/initializers/devise.rb`に書いて`rails s`
+
+```ruby
+config.scoped_views = true
+```
+
+### コントローラのカスタマイズ
+
+カスタマイズ用コントローラをコピー生成して、必要な機能を足していく
+
+```
+$ bundle exec rails g devise:controllers users
+      create  app/controllers/users/confirmations_controller.rb
+      create  app/controllers/users/passwords_controller.rb
+      create  app/controllers/users/registrations_controller.rb
+      create  app/controllers/users/sessions_controller.rb
+      create  app/controllers/users/unlocks_controller.rb
+      create  app/controllers/users/omniauth_callbacks_controller.rb
+===============================================================================
+
+Some setup you must do manually if you haven't yet:
+
+  Ensure you have overridden routes for generated controllers in your route.rb.
+  For example:
+
+    Rails.application.routes.draw do
+      devise_for :users, controllers: {
+        sessions: 'users/sessions'
+      }
+    end
+
+===============================================================================
+```
+
+ルーティングに、このコントローラを使うように設定。下記の場合はsessionsとregistrationsはカスタマイズしたコントローラを使う。
+
+```ruby
+devise_for :users, controllers: {
+  sessions:       'users/sessions',
+  registrations:  'users/registrations'
+}
+```
+
+
+
+
