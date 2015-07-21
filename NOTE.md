@@ -475,5 +475,18 @@ devise_for :users, controllers: {
 ```
 
 
+# fluentd
+
+- Macにdmgでインストール
+  - http://docs.fluentd.org/articles/install-by-dmg
+- 起動と停止
+  - sudo launchctl load /Library/LaunchDaemons/td-agent.plist
+  - sudo launchctl unload /Library/LaunchDaemons/td-agent.plist
+- 設定ファイル
+  - /etc/td-agent/td-agent.conf
+  - /etc/td-agent/plugin
+- ログファイル
+  - /var/log/td-agent/td-agent.log
+
 
 
