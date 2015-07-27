@@ -13,10 +13,10 @@ machine:
     circlehost: 127.0.0.1
 
 dependencies:
-  # pre:
+  pre:
     # - npm install coffeescript # install from a different package manager
-    # - gem uninstall bundler # use a custom version of bundler
-    # - gem install bundler --pre
+    - gem uninstall bundler # use a custom version of bundler
+    - gem install bundler -v 1.10.5
 
   override:
     - docker info
@@ -37,14 +37,10 @@ database:
     - cp config/database.yml.ci config/database.yml
     # - bundle exec rake db:schema:load RAILS_ENV=test
 
-# test:
-  # override:
-    # - phpunit test/unit-tests # use PHPunit for testing
-  # post:
-    # - bundle exec rake jasmine:ci: # add an extra test type
-        # environment:
-          # RAILS_ENV: test
-          # RACK_ENV: test
+test:
+  override:
+    - docker run -d -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb -D -E production; sleep 10
+    - curl --retry 10 --retry-delay 5 -v http://localhost:3000
 
 ## Customize deployment commands
 deployment:
