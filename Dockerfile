@@ -3,20 +3,30 @@ MAINTAINER violetyk <yuhei.kagaya@gmail.com>
 
 ENV APP_HOME /app
 
-RUN echo "Asia/Tokyo" > /etc/timezone
-RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-RUN apt-get update
+# RUN mkdir $APP_HOME
+# COPY ./test.rb ${APP_HOME}/
+# WORKDIR $APP_HOME
+# EXPOSE 3000
+# CMD ["ruby", "test.rb"]
 
-RUN mkdir $APP_HOME
+RUN \
+  echo "Asia/Tokyo" > /etc/timezone && \
+  cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+  apt-get update && \
+  apt-get install -qq -y nodejs npm logrotate --no-install-recommends && \
+  npm install -g typescript && \
+  update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10 && \
+  rm -rf /var/lib/apt/lists/* \
+  mkdir ${APP_HOME}/
+
+
 WORKDIR $APP_HOME
-
-# Set up gems
-ADD ./Gemfile $APP_HOME/Gemfile
-ADD ./Gemfile.lock $APP_HOME/Gemfile.lock
+COPY [ \
+  "./Gemfile", "./Gemfile.lock", "$APP_HOME/" \
+]
 RUN bundle install -j`nproc` --path vendor/bundle --without development test staging
 
+
+COPY . $APP_HOME
 EXPOSE 3000
-
-ADD . $APP_HOME
-
-# CMD ["bundle", "exec", "foreman", "start"]
+CMD ["bundle", "exec", "unicorn", "-c", "config/unicorn.rb"]

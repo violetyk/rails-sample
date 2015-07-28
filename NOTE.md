@@ -489,4 +489,213 @@ devise_for :users, controllers: {
   - /var/log/td-agent/td-agent.log
 
 
+# Docker
+
+## Boot2Docker
+
+- ローカルのMacにインストールして起動
+- https://github.com/boot2docker/osx-installer/releases/latest
+
+```
+which docker
+which boot2docker
+boot2docker init
+boot2docker start
+eval "$(boot2docker shellinit)"
+boot2docker status
+```
+
+VMにログイン
+```
+boot2docker ssh
+```
+
+停止
+```
+boot2docker stop
+```
+
+## はじめてのDocker
+
+### Hello worldコンテナを起動
+
+- Docker Hubからubuntu:14:04のイメージを持ってくる
+- `run`でイメージからコンテナを作成＆起動する
+- `/bin/echo "HelloWorld"`
+
+```
+docker run ubuntu:14.04 /bin/echo 'Hello world'
+docker images
+```
+
+
+### インタラクティブコンテナ
+
+- コンテナを起動して`/bin/bash`を動かす
+  - `-t`  Allocate a pseudo-TTY
+  - `-i`  Keep STDIN open even if not attached
+- `exit`してプロセス終了するとコンテナもストップ
+
+```
+docker run -t -i ubuntu:14.04 /bin/bash
+```
+
+### daemon版 Hello world
+
+- バックグラウンドで実行
+  - `-d, --detach=false` Run container in background and print container ID
+- NAMEをつけないと適当な名前が割り振られる
+- 起動中のコンテナをみるには`docker ps`
+- コンテナの出力をみるには`docker logs`でみる
+- コンテナの停止は`docker stop`
+
+```sh
+docker run -d ubuntu:14.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"
+50a5fef8eddc736d74678243179789062025f7c6d65a8d67a3c2335429786e7c
+
+# の文字列はコンテナID。起動中のコンテナを調べると出てくる
+docker ps
+CONTAINER ID  IMAGE         COMMAND                CREATED        STATUS        PORTS     NAMES
+50a5fef8eddc  ubuntu:14.04  "/bin/sh -c 'while t   4 seconds ago  Up 3 seconds            jovial_banach
+```
+
+```sh
+# コンテナの出力をみる
+docker logs jovial_banach
+docker logs 50a5fef8eddc
+```
+
+
+## Dockerコマンドまとめ
+
+### コンテナの操作
+```sh
+# 作成と起動
+docker run ubuntu:14.04 /bin/echo 'Hello world'
+docker run --name hello_world ubuntu:14.04 /bin/echo 'Hello world'
+docker run -t -i ubuntu:14.04 /bin/bash
+docker run -d ubuntu:14.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"
+
+# --rm 終了時にdockerコンテナを削除する
+docker run --rm -t -i ubuntu /bin/bash
+
+# -d バックグラウンドで起動
+docker run -d ubuntu:14.04 /bin/echo 'Hello world'
+
+
+# 起動中のコンテナを表示
+docker ps
+
+# コンテナの出力をみる
+docker logs jovial_banach
+docker logs 50a5fef8eddc
+
+# コンテナ停止
+docker stop CONTAINER_ID
+
+# 全コンテナを表示
+docker ps -a
+
+# コンテナのIDだけの一覧を表示
+docker ps -q
+
+# 停止中も含むコンテナの中で最後に作成したものだけを表示
+docker ps -l
+
+# コンテナの起動
+docker start CONTAINER_ID
+
+# 起動中のコンテナにプロセスを追加
+docker exec 370cbfea2519 env
+docker exec -i -t 370cbfea2519 /bin/bash
+```
+
+### イメージの操作
+
+```sh
+# 一覧
+docker images
+
+# 削除
+docker rmi IMAGE_ID
+# タグなしのイメージを強制削除
+docker rmi -f  $(docker images | grep '\<none\>' | awk '{print $3}')
+
+
+# カレントディレクトリにあるDockerfileからイメージを作成
+docker build ./
+docker build -t REPOSITORY:TAG ./
+# キャッシュを使わないでビルド
+docker build --no-cache .
+```
+
+
+
+# Dockerfile
+
+- WEBrickのコンテナをつくってみる
+
+```test.rb
+require 'webrick'
+
+# Dockerコンテナ内ではフォアに持ってこないとダメ
+# Process.daemon
+WEBrick::HTTPServer.new(DocumentRoot: './', Port: 3000).start
+```
+
+```Dockerfile
+FROM ruby:2.2.0
+MAINTAINER violetyk <yuhei.kagaya@gmail.com>
+
+ENV APP_HOME /app
+RUN mkdir $APP_HOME
+
+COPY ./test.rb ${APP_HOME}/
+WORKDIR $APP_HOME
+EXPOSE 3000
+# CMD "ruby test.rb && tail -f /dev/null"
+CMD ["ruby", "test.rb"]
+```
+
+- イメージをビルド
+```sh
+docker build -t sample .
+docker images
+```
+
+- VMのIPを確認しておく
+- VMの3000番とコンテナの30000番をつなぎ、コンテナを作成して起動
+- `192.168.59.103:3000`へアクセスするとコンテナが動く
+
+```
+boot2docker ip
+192.168.59.103
+
+docker run -d -p 3000:3000 be730d27704f
+```
+
+## CMDとENTRYPOINT
+- https://www.qoosky.net/references/207/ より
+
+`CMD` は `ENTRYPOINT` の引数を指定します。`ENTRYPOINT` の既定値は [""] です。  
+`ENTRYPOINT` を変更しない場合、コンテナ内では `start` または `exec` 時に
+```
+CMD top -b
+-> /bin/sh -c 'top -b'
+
+CMD ["top", "-b"]
+-> top -b
+```
+が実行されます。  
+`ENTRYPOINT` を変更すると以下のように `CMD` は `ENTRYPOINT` の引数として機能します。
+
+```
+ENTRYPOINT ["top", "-b"]
+CMD this_does_not_work
+-> top -b /bin/sh -c this_does_not_work
+
+ENTRYPOINT ["top", "-b"]
+CMD ["-d1"]
+-> top -b -d1
+```
 
