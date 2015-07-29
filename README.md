@@ -587,6 +587,8 @@ docker run --rm -t -i ubuntu /bin/bash
 # -d バックグラウンドで起動
 docker run -d ubuntu:14.04 /bin/echo 'Hello world'
 
+# host側のディレクトリをコンテナのディレクトリにマウント
+docker run -v /host/volume:/var/volume:rw ubuntu:14.04
 
 # 起動中のコンテナを表示
 docker ps
@@ -613,6 +615,10 @@ docker start CONTAINER_ID
 # 起動中のコンテナにプロセスを追加
 docker exec 370cbfea2519 env
 docker exec -i -t 370cbfea2519 /bin/bash
+
+# コンテナの強制終了
+docker kill CONTAINER_ID
+
 ```
 
 ### イメージの操作
