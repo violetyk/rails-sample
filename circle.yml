@@ -30,16 +30,16 @@ dependencies:
 
 database:
   override:
-    # - cp config/database.yml.ci config/database.yml
-    # - bundle exec rake db:schema:load RAILS_ENV=test
+    - mysql -e "grant all privileges on *.* to 'docker'@'%' identified by 'docker'"
+    - mysql -e "flush privileges"
 
 test:
   override:
     - export CIRCLE_CI_HOST=$(ip r | grep 'docker0' | awk '{print $9}')
     ## rspec
-    - docker run --env DATABASE_URL=mysql2://ubuntu:@${CIRCLE_CI_HOST}localhost:3306/circle_test --env RAILS_ENV=test violetyk/rails-sample bundle exec rspec
+    - docker run --env DATABASE_URL=mysql2://docker:docker@localhost/circle_test?socket=/var/volume/mysqld.sock -v /var/run/mysqld:/var/volume:rw --env RAILS_ENV=test violetyk/rails-sample bundle exec rspec
     ## docker container
-    - docker run --env DATABASE_URL=mysql2://ubuntu:@${CIRCLE_CI_HOST}localhost:3306/circle_test --env RAILS_ENV=production -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb; sleep 10
+    # - docker run --env DATABASE_URL=mysql2://ubuntu:@${CIRCLE_CI_HOST}:3306/circle_test --env RAILS_ENV=production -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb; sleep 10
     # - docker run -d -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb -D -E production; sleep 10
     - curl --retry 10 --retry-delay 5 -v http://localhost:3000
 
