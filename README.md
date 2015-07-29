@@ -704,3 +704,76 @@ CMD ["-d1"]
 -> top -b -d1
 ```
 
+# 環境の切り替え方法
+
+- 対象
+  - database.yml
+  - secrets.yml
+- 環境
+  - development
+  - test (local)
+  - test (CircleCI)
+  - production
+- 方法
+  - development
+    - database.yml -> fileで直接指定
+    - secrets.yml -> fileで直接指定
+  - test (local)
+    - database.yml -> 環境変数`DATABASE_URL`を使う
+      - 開発時に都度指定するのが面倒なので、direnvを使う
+    - secrets.yml -> fileで直接指定
+  - test (CircleCI)
+    - database.yml -> 環境変数`DATABASE_URL`を使う
+      - docker run --env DATABASE_URL=mysql2://myuser:mypass@localhost/somedatabase
+    - secrets.yml -> fileで直接指定
+  - production
+    - database.yml -> 環境変数`DATABASE_URL`を使う
+      - docker-compose.ymlで指定
+    - secrets.yml -> 環境変数`SECRET_KEY_BASE`を使う
+      - docker-compose.ymlで指定
+
+## direnv
+- http://direnv.net/
+-
+### install
+```sh
+brew install direnv
+# or 
+go get github.com/zimbatm/direnv
+# or
+git clone https://github.com/zimbatm/direnv
+cd direnv
+make install
+```
+
+### setup
+
+~/.zshrc
+
+```
+eval "$(direnv hook zsh)"
+```
+~/.bash
+
+```
+eval "$(direnv hook bash)"
+```
+
+
+### how to use
+
+```
+direnv edit .
+direnv allow
+```
+
+- .envrcには環境変数以外もかける
+  - スクリプト
+  - direnvのコマンド
+    - layout program_name :その言語用の開発環境をセットアップする
+    - PATH_add path: 環境変数PATHにpathを追加
+    - path_add envname path: 環境変数envnameにpathを追加
+  - その他: https://github.com/direnv/direnv/blob/master/man/direnv-stdlib.1.md
+
+
+

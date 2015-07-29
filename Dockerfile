@@ -24,9 +24,10 @@ WORKDIR $APP_HOME
 COPY [ \
   "./Gemfile", "./Gemfile.lock", "$APP_HOME/" \
 ]
-RUN bundle install -j`nproc` --path vendor/bundle --without development test staging
+# RUN bundle install -j`nproc` --path vendor/bundle --without development test staging
+RUN bundle install -j`nproc` --path vendor/bundle
 
 
 COPY . $APP_HOME
 EXPOSE 3000
-CMD ["bundle", "exec", "unicorn", "-c", "config/unicorn.rb"]
+# CMD ["bundle", "exec", "unicorn", "-c", "config/unicorn.rb"]

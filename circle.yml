@@ -1,4 +1,6 @@
 machine:
+  environment:
+    # - HOGE: fuga
   services:
     - docker
 
@@ -13,32 +15,31 @@ machine:
     circlehost: 127.0.0.1
 
 dependencies:
+  cache_directories:
+    - "~/docker"
+
   pre:
     - rbenv exec gem install bundler -v 1.10.5 # use a custom version of bundler
     - rbenv rehash
 
   override:
     - docker info
-    # - if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; fi
+    - if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; fi
     - docker build -t violetyk/rails-sample .
-    # - mkdir -p ~/docker; docker save violetyk/rails-sample > ~/docker/image.tar
-    # - sudo pip install awscli
-    # - bundle update: # note ':' here
-        # timeout: 180 # fail if command has no output for 3 minutes
-
-  # we automatically cache and restore many dependencies between
-  # builds. If you need to, you can add custom paths to cache:
-  # cache_directories:
-    # - "~/docker"
+    - mkdir -p ~/docker; docker save violetyk/rails-sample > ~/docker/image.tar
 
 database:
   override:
-    - cp config/database.yml.ci config/database.yml
+    # - cp config/database.yml.ci config/database.yml
     # - bundle exec rake db:schema:load RAILS_ENV=test
 
 test:
   override:
-    - docker run -d -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb -D -E production; sleep 10
+    ## rspec
+    - docker run --env DATABASE_URL=mysql2://ubuntu:@localhost:3306/circle_test --env RAILS_ENV=test violetyk/rails-sample bundle exec rspec
+    ## docker container
+    - docker run --env DATABASE_URL=mysql2://ubuntu:@localhost:3306/circle_test --env RAILS_ENV=production -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb; sleep 10
+    # - docker run -d -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb -D -E production; sleep 10
     - curl --retry 10 --retry-delay 5 -v http://localhost:3000
 
 ## Customize deployment commands

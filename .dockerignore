@@ -18,6 +18,7 @@ tmp
 containers
 
 ## other
+.envrc
 .tmuxinator
 README.md
 README.rdoc
