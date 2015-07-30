@@ -783,3 +783,86 @@ direnv allow
 
 
 
+# ECS + S3でPrivate Docker Registoryをたてる
+
+- S3
+  - バケットを作成
+    - sample-docker-registory
+- IAM
+  - ユーザを作成
+    - sample-docker-registory
+    - インラインポリシーでS3のこのバケットを読み書きするポリシーをあてる
+    - アクセスキーIDとシークレットアクセスキーをメモ
+  - ロールを作成
+    - Amazon EC2 Role for EC2 Container Service をつける
+- VPC
+  - VPC
+    - 172.13.0.0/16
+  - Gateway
+    - つくったらVPCへアタッチ
+  - Subnet
+    - 172.13.1.0/24
+  - Routetable
+    - ルートを編集
+      - 0.0.0.0/0 -> Gateway
+    - サブネットを関連付ける
+  - セキュリティグループ
+    - 22,5000,8080番ポートを空けとく
+    - CircleCIからのアクセスを制御する場合
+      - [AWSで別のアカウントのセキュリティグループを使う](http://qiita.com/71713@github/items/535105946803c3fa7c19)
+      - [CircleCIからCapistranoを利用してAWS（EC2）にデプロイする](http://qiita.com/ryshinoz/items/85eecd2b860227a45ccd)
+      - (https://circleci.com/docs/ec2ip-and-security-group)
+- EC2
+  - [Launching an Amazon ECS Container Instance](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html)
+  - AMI
+    - コミュニティAMIでamzn-ami-2015.03.d-amazon-ecs-optimizedを検索
+    - ap-northeast-1の場合、ami-fa12b7fa
+  - インスタンスタイプ
+    - t2.micro
+  - インスタンスの詳細
+    - VPC
+    - サブネット
+    - 自動割り当てパブリック IPを有効化
+    - 高度な詳細>ユーザーデータ
+    - `#!/bin/bash`
+    - `echo ECS_CLUSTER=your_cluster_name >> /etc/ecs/ecs.config`
+- ECS
+  - docker-registry用クラスタを作る
+  - タスクを定義する
+    - タスクとはdocker-compose.ymlのように、複数コンテナ間のリンクやホストとのポートマッピングなどの設定
+    - CPU Unitsという単位
+      - vCPU1つあたり1024
+    - docker-registry用コンテナ
+      - Container name : docker-registry
+      - Image : registry:latest
+      - Memory : 512
+      - CPU Units : 512
+      - Essential : on
+      - PortMappings
+        - 5000:5000 /tcp
+      - Environment Variables
+        - AWS_KEY : S3へアクセス権限を持つユーザのアクセスID
+        - AWS_SECRET : S3へアクセス権限を持つユーザのシークレットアクセスキー
+        - AWS_BUCKET : S3のバケット名
+        - SETTING_FLAVOR : s3
+        - STORAGE_PATH : /registry S3バケット上のパス
+        - SEARCH_BACKEND : sqlalchemy 検索バックエンド
+    - docker-registry-frontend用コンテナ
+      - Container name : docker-registry-frontend
+      - Image : konradkleine/docker-registry-frontend
+      - Memory : 512
+      - CPU Units : 512
+      - Essential : on
+      - PortMappings
+        - 8080:80 /tcp
+      - Environment Variables
+        - ENV_DOCKER_REGISTRY_HOST : docker-registry
+          - docker-registryコンテナのホスト名
+          - ここではリンクしているdocker-registry用コンテナの名前
+        - ENV_DOCKER_REGISTRY_PORT : 5000
+          - docker-registryコンテナのポート番号
+      - Links : docker-registry
+  - タスクをサービスにする
+    - 1回だけ実行するのがタスク、常時実行するのがサービス
+    - Task Definitionsからタスクを選んでActions > Create Service
+
