@@ -911,6 +911,10 @@ aws ecs update-service --service service-docker-registry --desired-count 0
 ```
 
 
+## registry:2.0でやってみる
+
+https://github.com/docker/distribution/blob/master/docs/configuration.md#override-configuration-options
+
 
 
 

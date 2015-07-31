@@ -53,7 +53,7 @@ deployment:
         -e REGISTRY_STORAGE_S3_SECRETKEY=$REGISTRY_STORAGE_S3_SECRETKEY \
         -e REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
         -e REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
-        -e REGISTRY_STORAGE_S3_ROOTDIRECTORY=/v2  \
+        -e REGISTRY_STORAGE_S3_ROOTDIRECTORY=/  \
         registry:2.0
       - docker tag -f violetyk/rails-sample localhost:5000/violetyk/rails-sample
       - docker tag -f violetyk/rails-sample localhost:5000/violetyk/rails-sample:$(git log -n 1 --format=%H)
