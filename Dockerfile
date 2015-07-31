@@ -17,7 +17,9 @@ RUN \
   npm install -g typescript && \
   update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10 && \
   rm -rf /var/lib/apt/lists/* \
-  mkdir ${APP_HOME}/
+  mkdir ${APP_HOME}/ \
+  mkdir ${APP_HOME}/tmp \
+  mkdir ${APP_HOME}/log
 
 
 WORKDIR $APP_HOME

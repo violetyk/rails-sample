@@ -619,6 +619,8 @@ docker exec -i -t 370cbfea2519 /bin/bash
 # コンテナの強制終了
 docker kill CONTAINER_ID
 
+# 全コンテナ削除
+docker -a -q | xargs docker rm
 ```
 
 ### イメージの操作
@@ -787,10 +789,8 @@ direnv allow
 
 - S3
   - バケットを作成
-    - sample-docker-registory
 - IAM
   - ユーザを作成
-    - sample-docker-registory
     - インラインポリシーでS3のこのバケットを読み書きするポリシーをあてる
     - アクセスキーIDとシークレットアクセスキーをメモ
   - ロールを作成
@@ -836,7 +836,7 @@ direnv allow
       - Container name : docker-registry
       - Image : registry:latest
       - Memory : 512
-      - CPU Units : 512
+      - CPU Units : 10
       - Essential : on
       - PortMappings
         - 5000:5000 /tcp
@@ -850,8 +850,8 @@ direnv allow
     - docker-registry-frontend用コンテナ
       - Container name : docker-registry-frontend
       - Image : konradkleine/docker-registry-frontend
-      - Memory : 512
-      - CPU Units : 512
+      - Memory : 448
+      - CPU Units : 10
       - Essential : on
       - PortMappings
         - 8080:80 /tcp
@@ -866,3 +866,52 @@ direnv allow
     - 1回だけ実行するのがタスク、常時実行するのがサービス
     - Task Definitionsからタスクを選んでActions > Create Service
 
+## boot2dockerからpushしてみる
+
+```sh
+# ビルド
+docker build -t violetyk/rails-sample .
+
+# タグ付け
+# docker tag IMAGE REPOSITORY[:TAG] tagを省略するとlatest
+docker tag violetyk/rails-sample YOUR_REGISTRY_HOST:5000/violetyk/rails-sample
+
+# latestの他にコミットIDでタグ付けしておくと、そのコミットのコンテナがわかるからいざというとき便利
+docker tag violetyk/rails-sample YOUR_REGISTRY_HOST:5000/violetyk/rails-sample:$(git log -n 1 --format=%H)
+
+# 確認
+$ docker images
+REPOSITORY                                 TAG                                        IMAGE ID            CREATED             VIRTUAL SIZE
+YOUR_REGISTRY_HOST:5000/violetyk/rails-sample   latest                                     a64aa04295eb        19 minutes ago      914.6 MB
+YOUR_REGISTRY_HOST:5000/violetyk/rails-sample   726a37ff47ed7c494440e8873abb3fe89f25ee94   a64aa04295eb        19 minutes ago      914.6 MB
+violetyk/rails-sample                      latest                                     a64aa04295eb        19 minutes ago      914.6 MB
+
+# push
+# docker push YOUR_REGISTRY_HOST:5000/violetyk/rails-sample # HTTPSアクセスしようとしてエラーになる...
+# ところで、http://YOUR_REGISTRY_HOST:5000/v1/_pingにアクセスするとdocker-registryの情報がいろいろ確認できるぽい
+
+# /var/lib/boot2docker/profileファイルに設定を追加
+boot2docker ssh "echo $'EXTRA_ARGS=\"--insecure-registry YOUR_REGISTRY_HOST:5000\"' | sudo tee -a /var/lib/boot2docker/profile && sudo /etc/init.d/docker restart"
+```
+
+さっき立てたdocker-registry-frontend `http://YOUR_REGISTRY_HOST:8080` にアクセスするとpushされたイメージが確認できる
+
+## クラスタを削除
+
+AWS マネジメントコンソールからServiceを削除仕様とするとエラーになって削除できない...
+
+```
+ Unable to delete service
+ The service cannot be stopped while the primary deployment is scaled above 0.
+```
+
+CLI でサービスを消してから Clusterを消すとイケる？
+```
+aws ecs update-service --service service-docker-registry --desired-count 0
+```
+
+
+
+
+
+## CircleCIからpushしてみる

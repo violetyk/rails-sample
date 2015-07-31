@@ -40,16 +40,27 @@ test:
     - docker run --env DATABASE_URL=mysql2://docker:docker@localhost/circle_test?socket=/var/volume/mysqld.sock -v /var/run/mysqld:/var/volume:rw --env RAILS_ENV=test violetyk/rails-sample bundle exec rspec
     ## docker container
     - docker run --env DATABASE_URL=mysql2://ubuntu:@localhost/circle_test?socket=/var/volume/mysqld.sock -v /var/run/mysqld:/var/volume:rw --env RAILS_ENV=production -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb; sleep 10
-    # - docker run -d -p 3000:3000 violetyk/rails-sample bundle exec unicorn -c config/unicorn.rb -D -E production; sleep 10
     - curl --retry 10 --retry-delay 5 -v http://localhost:3000
 
-## Customize deployment commands
 deployment:
-  hub:
+  production:
     branch: master
     commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push violetyk/rails-sample
+      - docker run -d -p 5000:5000 \
+        --name registry \
+        -e REGISTRY_STORAGE=s3 \
+        -e REGISTRY_STORAGE_S3_ACCESSKEY=$REGISTRY_STORAGE_S3_ACCESSKEY \
+        -e REGISTRY_STORAGE_S3_SECRETKEY=$REGISTRY_STORAGE_S3_SECRETKEY \
+        -e REGISTRY_STORAGE_S3_REGION=$REGISTRY_STORAGE_S3_REGION \
+        -e REGISTRY_STORAGE_S3_BUCKET=$REGISTRY_STORAGE_S3_BUCKET \
+        -e REGISTRY_STORAGE_S3_ROOTDIRECTORY=/v2  \
+        registry:2.0
+      - docker tag -f violetyk/rails-sample localhost:5000/violetyk/rails-sample
+      - docker tag -f violetyk/rails-sample localhost:5000/violetyk/rails-sample:$(git log -n 1 --format=%H)
+      - docker push localhost:5000/violetyk/rails-sample
+      - docker push localhost:5000/violetyk/rails-sample:$(git log -n 1 --format=%H)
+      # - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      # - docker push violetyk/rails-sample
   # staging:
     # branch: master
     # heroku:
